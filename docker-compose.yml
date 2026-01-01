@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: vibeverse_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  proxy:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: vibeverse_proxy
+    restart: unless-stopped
+    environment:
+      - PORT=5174
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "5174:5174"
+    depends_on:
+      - redis
