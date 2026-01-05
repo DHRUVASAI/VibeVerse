@@ -23,28 +23,30 @@
 
 <div align="center">
 
+> **📷 Note:** Add your app screenshots to the `docs/images/` folder. The images below will automatically display once uploaded.
+
 ### Hero Section & Splash Screen
-![Hero Section](./docs/images/hero-section.png)
+![Hero Section](docs/images/hero-section.png)
 *Beautiful animated splash screen with gradient orbs and smooth transitions*
 
 ### Mood Selection Interface
-![Mood Selection](./docs/images/mood-selection.png)
+![Mood Selection](docs/images/mood-selection.png)
 *Interactive mood picker with quick access buttons and advanced quiz options*
 
 ### Movie Recommendations
-![Movie Recommendations](./docs/images/movie-recommendations.png)
+![Movie Recommendations](docs/images/movie-recommendations.png)
 *Curated movie grid with filters, ratings, and streaming availability*
 
 ### Music Player
-![Music Player](./docs/images/music-player.png)
+![Music Player](docs/images/music-player.png)
 *Integrated YouTube music player with playlist management*
 
 ### Vibe Map (Emotional Galaxy)
-![Vibe Map](./docs/images/vibe-map.png)
+![Vibe Map](docs/images/vibe-map.png)
 *Interactive 3D emotional galaxy for exploring moods visually*
 
 ### Vibe Journal
-![Vibe Journal](./docs/images/vibe-journal.png)
+![Vibe Journal](docs/images/vibe-journal.png)
 *Track your mood history and movie preferences over time*
 
 </div>
