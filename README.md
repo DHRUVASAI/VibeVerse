@@ -23,8 +23,6 @@
 
 <div align="center">
 
-> **📷 Note:** Add your app screenshots to the `docs/images/` folder. The images below will automatically display once uploaded.
-
 ### Hero Section & Splash Screen
 ![Hero Section](docs/images/hero-section.png)
 *Beautiful animated splash screen with gradient orbs and smooth transitions*
