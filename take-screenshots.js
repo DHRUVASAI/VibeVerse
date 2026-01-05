@@ -15,58 +15,146 @@ if (!fs.existsSync(SCREENSHOT_DIR)) {
 }
 
 const screenshots = [
-    { name: 'hero-section', desc: 'Hero Section & Splash Screen', wait: 3000 },
-    { name: 'mood-selection', desc: 'Mood Selection Interface', wait: 2000 },
-    { name: 'movie-recommendations', desc: 'Movie Recommendations', wait: 5000, action: async (page) => {
-        // Search for a mood
-        try {
-            const moodInput = await page.$('#mainMoodInput');
-            if (moodInput) {
-                await moodInput.click();
-                await moodInput.type('happy', { delay: 100 });
-                const submitBtn = await page.$('#moodSubmitBtn');
-                if (submitBtn) {
-                    await submitBtn.click();
-                    await page.waitForSelector('.movies-grid, .results-section', { timeout: 15000 }).catch(() => {});
+    { 
+        name: 'hero-section', 
+        desc: 'Hero Section & Splash Screen', 
+        wait: 4000,
+        action: async (page) => {
+            // Wait for splash screen or auth screen
+            await page.waitForSelector('#splashScreen, #authSection', { timeout: 5000 }).catch(() => {});
+            // If splash screen exists, wait a bit for animation
+            const splash = await page.$('#splashScreen');
+            if (splash) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+    },
+    { 
+        name: 'mood-selection', 
+        desc: 'Mood Selection Interface (Guest Mode)', 
+        wait: 3000,
+        action: async (page) => {
+            // Click guest login button
+            try {
+                const guestBtn = await page.$('#guestLoginBtn');
+                if (guestBtn) {
+                    console.log('  👤 Logging in as guest...');
+                    await guestBtn.click();
+                    await page.waitForSelector('#mainContainer, .search-section', { timeout: 10000 });
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
+            } catch (e) {
+                console.log('  ⚠️  Already logged in or guest button not found');
             }
-        } catch (e) {
-            console.log('  ⚠️  Could not trigger search, taking screenshot of current state');
         }
-    }},
-    { name: 'music-player', desc: 'Music Player', wait: 3000, action: async (page) => {
-        // Scroll to music section if it exists
-        await page.evaluate(() => {
-            const musicSection = document.querySelector('#vibeMusicSection');
-            if (musicSection) {
-                musicSection.scrollIntoView({ behavior: 'smooth' });
+    },
+    { 
+        name: 'movie-recommendations', 
+        desc: 'Movie Recommendations (Happy Mood)', 
+        wait: 8000,
+        action: async (page) => {
+            // Search for a mood and get results
+            try {
+                // Try quick mood button first
+                const happyBtn = await page.$('.quick-mood-btn[data-mood="Happy"]');
+                if (happyBtn) {
+                    console.log('  🎬 Clicking Happy mood button...');
+                    await happyBtn.click();
+                    await page.waitForSelector('.movies-grid, .results-section', { timeout: 20000 });
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                } else {
+                    // Fallback to text input
+                    const moodInput = await page.$('#mainMoodInput');
+                    if (moodInput) {
+                        await moodInput.click();
+                        await moodInput.type('happy', { delay: 150 });
+                        const submitBtn = await page.$('#moodSubmitBtn');
+                        if (submitBtn) {
+                            await submitBtn.click();
+                            await page.waitForSelector('.movies-grid, .results-section', { timeout: 20000 });
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('  ⚠️  Could not trigger search, taking screenshot of current state');
             }
-        });
-    }},
-    { name: 'vibe-map', desc: 'Vibe Map', wait: 3000, action: async (page) => {
-        // Click Vibe Map button
-        try {
-            const vibeMapBtn = await page.$('#showVibeMapBtn');
-            if (vibeMapBtn) {
-                await vibeMapBtn.click();
-                await page.waitForSelector('#vibeMapSection', { timeout: 5000 }).catch(() => {});
-            }
-        } catch (e) {
-            console.log('  ⚠️  Could not open Vibe Map, taking screenshot of current state');
         }
-    }},
-    { name: 'vibe-journal', desc: 'Vibe Journal', wait: 3000, action: async (page) => {
-        // Click Vibe Journal button
-        try {
-            const journalBtn = await page.$('#showMemoryLogBtn');
-            if (journalBtn) {
-                await journalBtn.click();
-                await page.waitForSelector('#moodMemorySidebar', { timeout: 5000 }).catch(() => {});
+    },
+    { 
+        name: 'music-player', 
+        desc: 'Music Player with Recommendations', 
+        wait: 4000,
+        action: async (page) => {
+            // Scroll to music section
+            try {
+                await page.evaluate(() => {
+                    const musicSection = document.querySelector('#vibeMusicSection');
+                    if (musicSection) {
+                        musicSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Try to expand music section if collapsed
+                const musicToggle = await page.$('#musicToggleBtn');
+                if (musicToggle) {
+                    const isExpanded = await page.evaluate((btn) => {
+                        const container = document.querySelector('#musicRecommendationsContainer');
+                        return container && !container.classList.contains('hidden');
+                    }, musicToggle);
+                    if (!isExpanded) {
+                        await musicToggle.click();
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                    }
+                }
+            } catch (e) {
+                console.log('  ⚠️  Music section not available');
             }
-        } catch (e) {
-            console.log('  ⚠️  Could not open Vibe Journal, taking screenshot of current state');
         }
-    }}
+    },
+    { 
+        name: 'vibe-map', 
+        desc: 'Vibe Map (Emotional Galaxy)', 
+        wait: 4000,
+        action: async (page) => {
+            // Click Vibe Map button
+            try {
+                const vibeMapBtn = await page.$('#showVibeMapBtn');
+                if (vibeMapBtn) {
+                    console.log('  🌌 Opening Vibe Map...');
+                    await vibeMapBtn.click();
+                    await page.waitForSelector('#vibeMapSection', { timeout: 8000 }).catch(() => {});
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            } catch (e) {
+                console.log('  ⚠️  Could not open Vibe Map');
+            }
+        }
+    },
+    { 
+        name: 'vibe-journal', 
+        desc: 'Vibe Journal (Mood History)', 
+        wait: 3000,
+        action: async (page) => {
+            // Close vibe map if open, then open journal
+            try {
+                const vibeMapClose = await page.$('#vibeMapClose');
+                if (vibeMapClose) {
+                    await vibeMapClose.click();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                const journalBtn = await page.$('#showMemoryLogBtn');
+                if (journalBtn) {
+                    console.log('  📋 Opening Vibe Journal...');
+                    await journalBtn.click();
+                    await page.waitForSelector('#moodMemorySidebar', { timeout: 8000 }).catch(() => {});
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+            } catch (e) {
+                console.log('  ⚠️  Could not open Vibe Journal');
+            }
+        }
+    }
 ];
 
 async function takeScreenshots() {
@@ -87,8 +175,13 @@ async function takeScreenshots() {
         console.log(`🌐 Navigating to ${APP_URL}...`);
         await page.goto(APP_URL, { waitUntil: 'networkidle2', timeout: 30000 });
         
+        // Clear any existing localStorage to start fresh
+        await page.evaluate(() => {
+            localStorage.clear();
+        });
+        
         // Wait for app to load
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Take each screenshot
         for (const shot of screenshots) {
