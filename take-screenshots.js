@@ -18,13 +18,17 @@ const screenshots = [
     { 
         name: 'hero-section', 
         desc: 'Hero Section & Splash Screen', 
-        wait: 4000,
+        wait: 5000,
         action: async (page) => {
             // Wait for splash screen or auth screen
             await page.waitForSelector('#splashScreen, #authSection', { timeout: 5000 }).catch(() => {});
-            // If splash screen exists, wait a bit for animation
+            // If splash screen exists, wait for animation
             const splash = await page.$('#splashScreen');
             if (splash) {
+                console.log('  ✨ Waiting for splash screen animation...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            } else {
+                // If auth screen, wait a bit
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
@@ -32,7 +36,7 @@ const screenshots = [
     { 
         name: 'mood-selection', 
         desc: 'Mood Selection Interface (Guest Mode)', 
-        wait: 3000,
+        wait: 4000,
         action: async (page) => {
             // Click guest login button
             try {
@@ -41,71 +45,104 @@ const screenshots = [
                     console.log('  👤 Logging in as guest...');
                     await guestBtn.click();
                     await page.waitForSelector('#mainContainer, .search-section', { timeout: 10000 });
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    // Scroll to show mood selection clearly
+                    await page.evaluate(() => {
+                        const searchSection = document.querySelector('.search-section');
+                        if (searchSection) {
+                            searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             } catch (e) {
-                console.log('  ⚠️  Already logged in or guest button not found');
+                console.log('  ⚠️  Already logged in, refreshing page...');
+                await page.reload({ waitUntil: 'networkidle2' });
+                await new Promise(resolve => setTimeout(resolve, 3000));
             }
         }
     },
     { 
         name: 'movie-recommendations', 
-        desc: 'Movie Recommendations (Happy Mood)', 
-        wait: 8000,
+        desc: 'Movie Recommendations (Thriller Mood)', 
+        wait: 10000,
         action: async (page) => {
-            // Search for a mood and get results
+            // Search for Thriller mood to get different results
             try {
-                // Try quick mood button first
-                const happyBtn = await page.$('.quick-mood-btn[data-mood="Happy"]');
-                if (happyBtn) {
-                    console.log('  🎬 Clicking Happy mood button...');
-                    await happyBtn.click();
-                    await page.waitForSelector('.movies-grid, .results-section', { timeout: 20000 });
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                // Try quick mood button for Thriller
+                const thrillerBtn = await page.$('.quick-mood-btn[data-mood="Thriller"]');
+                if (thrillerBtn) {
+                    console.log('  🎬 Clicking Thriller mood button...');
+                    await thrillerBtn.click();
+                    await page.waitForSelector('.movies-grid, .results-section', { timeout: 25000 });
+                    await new Promise(resolve => setTimeout(resolve, 4000));
+                    // Scroll to show movie grid
+                    await page.evaluate(() => {
+                        const moviesGrid = document.querySelector('.movies-grid');
+                        if (moviesGrid) {
+                            moviesGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 } else {
                     // Fallback to text input
                     const moodInput = await page.$('#mainMoodInput');
                     if (moodInput) {
                         await moodInput.click();
-                        await moodInput.type('happy', { delay: 150 });
+                        await page.evaluate((input) => input.value = '', moodInput);
+                        await moodInput.type('thriller suspense', { delay: 150 });
                         const submitBtn = await page.$('#moodSubmitBtn');
                         if (submitBtn) {
                             await submitBtn.click();
-                            await page.waitForSelector('.movies-grid, .results-section', { timeout: 20000 });
-                            await new Promise(resolve => setTimeout(resolve, 3000));
+                            await page.waitForSelector('.movies-grid, .results-section', { timeout: 25000 });
+                            await new Promise(resolve => setTimeout(resolve, 4000));
                         }
                     }
                 }
             } catch (e) {
-                console.log('  ⚠️  Could not trigger search, taking screenshot of current state');
+                console.log('  ⚠️  Could not trigger search');
             }
         }
     },
     { 
         name: 'music-player', 
         desc: 'Music Player with Recommendations', 
-        wait: 4000,
+        wait: 5000,
         action: async (page) => {
-            // Scroll to music section
+            // Scroll to music section and ensure it's visible
             try {
                 await page.evaluate(() => {
-                    const musicSection = document.querySelector('#vibeMusicSection');
-                    if (musicSection) {
-                        musicSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                    window.scrollTo(0, 0);
                 });
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                // Try to expand music section if collapsed
-                const musicToggle = await page.$('#musicToggleBtn');
-                if (musicToggle) {
-                    const isExpanded = await page.evaluate((btn) => {
-                        const container = document.querySelector('#musicRecommendationsContainer');
-                        return container && !container.classList.contains('hidden');
-                    }, musicToggle);
-                    if (!isExpanded) {
-                        await musicToggle.click();
-                        await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const musicSection = await page.$('#vibeMusicSection');
+                if (musicSection) {
+                    console.log('  🎵 Scrolling to music section...');
+                    await page.evaluate((section) => {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, musicSection);
+                    await new Promise(resolve => setTimeout(resolve, 2500));
+                    
+                    // Try to expand music section if collapsed
+                    const musicToggle = await page.$('#musicToggleBtn');
+                    if (musicToggle) {
+                        const isExpanded = await page.evaluate(() => {
+                            const container = document.querySelector('#musicRecommendationsContainer');
+                            return container && !container.classList.contains('hidden');
+                        });
+                        if (!isExpanded) {
+                            console.log('  🎵 Expanding music section...');
+                            await musicToggle.click();
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                        }
                     }
+                } else {
+                    // If no music section, scroll to show results with music
+                    await page.evaluate(() => {
+                        window.scrollBy(0, 600);
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                 }
             } catch (e) {
                 console.log('  ⚠️  Music section not available');
